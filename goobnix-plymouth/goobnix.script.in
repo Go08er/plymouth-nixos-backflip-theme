@@ -1,0 +1,146 @@
+# Goobnix Orbit: a single cached frame set, no runtime transforms or video.
+Window.SetBackgroundTopColor(0, 0, 0);
+Window.SetBackgroundBottomColor(0, 0, 0);
+Plymouth.SetRefreshRate(@FRAME_RATE@);
+
+frame_count = @FRAME_COUNT@;
+frame_index = 0;
+status = "normal";
+running = 1;
+caps_state = -1;
+message_text = "";
+for (i = 0; i < frame_count; i++) {
+    prefix = "frame-";
+    if (i < 10) prefix += "0";
+    frames[i] = Image(prefix + i + ".png");
+}
+animation = Sprite(frames[0]);
+animation.SetZ(0);
+prompt.sprite = Sprite();
+answer.sprite = Sprite();
+caps.sprite = Sprite();
+message.sprite = Sprite();
+prompt.sprite.SetOpacity(0);
+answer.sprite.SetOpacity(0);
+caps.sprite.SetOpacity(0);
+message.sprite.SetOpacity(0);
+
+fun position_label(label, fraction) {
+    if (label.image) {
+        label.sprite.SetPosition(
+            Window.GetX() + (Window.GetWidth() - label.image.GetWidth()) / 2,
+            Window.GetY() + Window.GetHeight() * fraction - label.image.GetHeight() / 2,
+            100);
+    }
+}
+
+fun layout() {
+    animation.SetPosition(
+        Window.GetX() + (Window.GetWidth() - frames[0].GetWidth()) / 2,
+        Window.GetY() + (Window.GetHeight() - frames[0].GetHeight()) / 2, 0);
+    position_label(prompt, 0.40);
+    position_label(answer, 0.50);
+    position_label(caps, 0.59);
+    position_label(message, 0.91);
+}
+
+fun set_label(label, text, font) {
+    if (text == "" || !text) {
+        label.sprite.SetOpacity(0);
+        return;
+    }
+    label.image = Image.Text(text, 1, 1, 1, 1, font, "center");
+    limit = Window.GetWidth() - 32;
+    if (label.image.GetWidth() > limit && limit > 0) {
+        label.image = label.image.Scale(limit,
+            label.image.GetHeight() * limit / label.image.GetWidth());
+    }
+    label.sprite.SetImage(label.image);
+    label.sprite.SetOpacity(1);
+    layout();
+}
+
+fun refresh_caps() {
+    current = Plymouth.GetCapslockState();
+    if (current != caps_state) {
+        global.caps_state = current;
+        text = "";
+        if (current) text = "Caps Lock is on";
+        set_label(caps, text, "Sans 12");
+    }
+}
+
+fun refresh() {
+    if (!running) return;
+    if (status == "normal") {
+        global.frame_index = (frame_index + 1) % frame_count;
+        animation.SetImage(frames[frame_index]);
+    } else if (status == "password") {
+        refresh_caps();
+    }
+}
+
+fun display_normal() {
+    global.status = "normal";
+    prompt.sprite.SetOpacity(0);
+    answer.sprite.SetOpacity(0);
+    caps.sprite.SetOpacity(0);
+    animation.SetOpacity(1);
+    layout();
+}
+
+fun display_password(text, bullets) {
+    global.status = "password";
+    animation.SetOpacity(0);
+    set_label(prompt, text, "Sans 16");
+    # Never receive or render a password: Plymouth supplies only its length.
+    masked = "";
+    for (i = 0; i < bullets && i < 32; i++) masked += "*";
+    if (bullets > 32) masked += "...";
+    if (bullets == 0) masked = "_";
+    set_label(answer, masked, "Monospace 20");
+    global.caps_state = -1;
+    refresh_caps();
+}
+
+fun display_question(text, entry) {
+    global.status = "question";
+    animation.SetOpacity(0);
+    caps.sprite.SetOpacity(0);
+    set_label(prompt, text, "Sans 16");
+    if (!entry || entry == "") entry = "_";
+    set_label(answer, entry, "Sans 18");
+}
+
+fun display_message(text) {
+    global.message_text = text;
+    set_label(message, text, "Sans 12");
+}
+
+fun hide_message(text) {
+    if (text == message_text) {
+        global.message_text = "";
+        message.sprite.SetOpacity(0);
+    }
+}
+
+fun system_update(progress) {
+    display_message("Installing updates: " + Math.Int(progress) + "%");
+}
+
+fun quit() {
+    # Return immediately; never hold up boot to finish a loop.
+    global.running = 0;
+    animation.SetImage(frames[0]);
+}
+
+layout();
+Plymouth.SetRefreshFunction(refresh);
+Plymouth.SetDisplayNormalFunction(display_normal);
+Plymouth.SetDisplayPasswordFunction(display_password);
+Plymouth.SetDisplayQuestionFunction(display_question);
+Plymouth.SetDisplayMessageFunction(display_message);
+Plymouth.SetHideMessageFunction(hide_message);
+Plymouth.SetSystemUpdateFunction(system_update);
+Plymouth.SetDisplayHotplugFunction(layout);
+Plymouth.SetQuitFunction(quit);

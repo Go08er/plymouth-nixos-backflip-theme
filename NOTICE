@@ -1,0 +1,18 @@
+The project's original code is licensed under the MIT License; see LICENSE.
+
+NixOS logo attribution
+---------------------
+This theme adapts the NixOS Logo, credited by the NixOS Project to Simon
+Frankau, Tim Cuthbertson, and Daniel Baker, and maintained by the NixOS
+Marketing Team.
+
+Source and provenance: https://github.com/NixOS/branding
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+https://creativecommons.org/licenses/by/4.0/
+
+Changes: the logo is reconstructed as polygons, recolored, and its components
+are scaled, rotated, and moved to create a looping backflip animation.
+
+The MIT license for this project's code does not replace the upstream logo
+license. This is an independent community theme, not an official NixOS
+release or an endorsement by the NixOS Project.

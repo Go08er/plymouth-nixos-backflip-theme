@@ -1,0 +1,54 @@
+# Only graphics and daemon-facing APIs are mocked; parsing, scoping, object
+# mutation, arithmetic and callback execution use the real Plymouth plugin.
+frame_loads = 0;
+viewport.width = 1920;
+viewport.height = 1080;
+viewport.x = 0;
+viewport.y = 0;
+test_caps = 0;
+
+fun make_image(name, width, height) {
+    local.result = [];
+    result.name = name;
+    result.width = width;
+    result.height = height;
+    result.GetWidth = fun() { return this.width; };
+    result.GetHeight = fun() { return this.height; };
+    result.Scale = fun(w, h) { return make_image(this.name, w, h); };
+    return result;
+}
+Image.Text = fun(text, red, green, blue, alpha, font, align) {
+    return make_image(text, 200, 24);
+};
+Image |= fun(filename) {
+    global.frame_loads++;
+    return make_image(filename, 480, 480);
+};
+Sprite = fun(image) {
+    local.result = [];
+    result.image = image;
+    result.opacity = 1;
+    result.SetImage = fun(image) { this.image = image; };
+    result.SetZ = fun(z) { this.z = z; };
+    result.SetOpacity = fun(opacity) { this.opacity = opacity; };
+    result.SetPosition = fun(x, y, z) { this.x = x; this.y = y; this.z = z; };
+    return result;
+};
+Window.GetWidth = fun() { return viewport.width; };
+Window.GetHeight = fun() { return viewport.height; };
+Window.GetX = fun() { return viewport.x; };
+Window.GetY = fun() { return viewport.y; };
+Window.SetBackgroundTopColor = fun(r, g, b) {};
+Window.SetBackgroundBottomColor = fun(r, g, b) {};
+Math.Int = fun(value) { return value - value % 1; };
+Plymouth.GetCapslockState = fun() { return test_caps; };
+Plymouth.SetRefreshRate = fun(rate) { global.refresh_rate = rate; };
+Plymouth.SetRefreshFunction = fun(callback) { global.on_refresh = callback; };
+Plymouth.SetDisplayNormalFunction = fun(callback) { global.on_normal = callback; };
+Plymouth.SetDisplayPasswordFunction = fun(callback) { global.on_password = callback; };
+Plymouth.SetDisplayQuestionFunction = fun(callback) { global.on_question = callback; };
+Plymouth.SetDisplayMessageFunction = fun(callback) { global.on_message = callback; };
+Plymouth.SetHideMessageFunction = fun(callback) { global.on_hide_message = callback; };
+Plymouth.SetSystemUpdateFunction = fun(callback) { global.on_update = callback; };
+Plymouth.SetDisplayHotplugFunction = fun(callback) { global.on_hotplug = callback; };
+Plymouth.SetQuitFunction = fun(callback) { global.on_quit = callback; };

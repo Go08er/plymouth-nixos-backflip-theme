@@ -1,0 +1,63 @@
+Check(refresh_rate == 50, "50 Hz playback");
+Check(frame_count == 60 && frame_loads == 60, "exactly 60 preloaded frames");
+Check(frames[0].name == "frame-00.png", "first frame filename");
+Check(frames[59].name == "frame-59.png", "last frame filename");
+Check(animation.image.name == "frame-00.png", "initial pose");
+Check(animation.x == 720 && animation.y == 300, "centered animation");
+for (step = 1; step <= 60; step++) {
+    on_refresh();
+    Check(frame_index == step % 60, "continuous frame sequence and wrap");
+}
+Check(frame_loads == 60, "no frame loads during playback");
+
+on_password("Unlock disk", 4);
+Check(status == "password" && animation.opacity == 0, "password hides animation");
+Check(prompt.image.name == "Unlock disk", "password prompt");
+Check(answer.image.name == "****", "password mask");
+Check(answer.sprite.opacity == 1 && prompt.sprite.opacity == 1, "visible prompt and mask");
+saved_index = frame_index;
+on_refresh();
+Check(frame_index == saved_index, "password pauses animation");
+test_caps = 1;
+on_refresh();
+Check(caps.image.name == "Caps Lock is on" && caps.sprite.opacity == 1, "caps lock hint");
+test_caps = 0;
+on_refresh();
+Check(caps.sprite.opacity == 0, "caps lock hint clears");
+on_password("Unlock disk", 0);
+Check(answer.image.name == "_", "empty password cursor");
+on_password("Unlock disk", 100);
+Check(answer.image.name == "********************************...", "bounded password mask");
+
+on_question("Continue?", "yes");
+Check(status == "question" && answer.image.name == "yes", "question entry");
+Check(animation.opacity == 0 && caps.sprite.opacity == 0, "question visibility");
+on_question("Continue?", "");
+Check(answer.image.name == "_", "empty question cursor");
+on_normal();
+Check(status == "normal" && animation.opacity == 1, "normal view restores animation");
+Check(answer.sprite.opacity == 0 && prompt.sprite.opacity == 0, "normal hides input");
+on_refresh();
+Check(frame_index == (saved_index + 1) % 60, "animation resumes");
+
+on_message("Checking disks");
+Check(message.image.name == "Checking disks" && message.sprite.opacity == 1, "boot message");
+on_hide_message("Some other message");
+Check(message.sprite.opacity == 1, "unrelated hide preserves message");
+on_hide_message("Checking disks");
+Check(message.sprite.opacity == 0, "matching hide clears message");
+on_update(42.8);
+Check(message.image.name == "Installing updates: 42%", "update progress");
+viewport.width = 1280;
+viewport.height = 720;
+viewport.x = 20;
+viewport.y = 10;
+on_hotplug();
+Check(animation.x == 420 && animation.y == 130, "hotplug recenters animation");
+Check(message.sprite.x == 560, "hotplug recenters messages");
+saved_index = frame_index;
+on_quit();
+on_refresh();
+Check(running == 0 && frame_index == saved_index, "quit stops immediately");
+Check(animation.image.name == "frame-00.png", "quit uses resting pose");
+Check(frame_loads == 60, "all callbacks reuse cached frames");

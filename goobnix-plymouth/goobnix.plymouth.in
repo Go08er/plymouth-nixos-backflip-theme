@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Goobnix Orbit
+Description=Alternating two-color Nix trampoline backflips
+ModuleName=script
+
+[script]
+ImageDir=@THEME_DIR@
+ScriptFile=@THEME_DIR@/goobnix.script

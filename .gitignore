@@ -1,0 +1,13 @@
+# Generated previews, render caches and local Nix results.
+/media/
+/*.mp4
+/result
+/result-*
+__pycache__/
+*.py[cod]
+.direnv/
+
+# Local tooling and the unrelated legacy desktop theme.
+/.codex
+/.agents/
+/goobnix-plasma/
