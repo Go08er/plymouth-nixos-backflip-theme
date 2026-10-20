@@ -4,7 +4,7 @@ import argparse
 from pathlib import Path
 import re
 
-from manim import tempconfig
+from manim import config, tempconfig
 from PIL import Image, ImageColor
 
 from throbber_spring import SpringBackflip
@@ -30,14 +30,19 @@ def main() -> None:
 
     # 50 fps at twice the former speed samples exactly the same 60 poses.
     # Direct PNG output avoids H.264 artifacts and preserves configured colors.
+    # Manim 0.22 replaced the old output switches with an explicit sequence
+    # format. Detect the API so existing Nixpkgs inputs keep working too.
+    legacy_output = "write_to_movie" in config
+    output_settings = (
+        {"format": "png", "write_to_movie": False, "save_last_frame": False}
+        if legacy_output else {"format": "png-sequence"}
+    )
     with tempconfig({
+        **output_settings,
         "renderer": "cairo",
         "pixel_width": args.size,
         "pixel_height": args.size,
         "frame_rate": 50,
-        "format": "png",
-        "write_to_movie": False,
-        "save_last_frame": False,
         "disable_caching": True,
         "progress_bar": "none",
         "media_dir": str(output.parent / "render-work"),
@@ -45,11 +50,23 @@ def main() -> None:
         "output_file": "frame-",
         "zero_pad": 2,
     }):
-        SpringBackflip(
+        scene = SpringBackflip(
             odd_color=args.odd_color,
             even_color=args.even_color,
             playback_speed=2.0,
-        ).render()
+        )
+        scene.render()
+
+    if not legacy_output:
+        # New Manim writes frame-/00.png instead of frame-00.png. Keep the
+        # installed Plymouth filenames identical across both render APIs.
+        sequence = Path(scene.renderer.file_writer.final_file_path)
+        rendered = [sequence / f"{i:02d}.png" for i in range(60)]
+        if sorted(sequence.glob("*.png")) != rendered:
+            raise RuntimeError("render did not produce exactly 60 numbered sequence frames")
+        for i, frame in enumerate(rendered):
+            frame.rename(output / f"frame-{i:02d}.png")
+        sequence.rmdir()
 
     expected = [output / f"frame-{i:02d}.png" for i in range(60)]
     if sorted(output.glob("*.png")) != expected:
