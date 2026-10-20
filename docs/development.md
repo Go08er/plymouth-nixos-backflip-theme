@@ -26,27 +26,62 @@ messages, display repositioning and immediate quit. They do not replace
 real boot testing, especially encrypted-disk unlock.
 
 The verified environment is x86_64 Linux, Nixpkgs 26.11pre-git, Python 3.14.7,
-Manim 0.21.0 / 0.22.0 and Plymouth 26.134.222. The package uses the caller's
+Manim 0.21.0 / 0.22.0, Click 8.3.3 / 8.4.2 and Plymouth 26.134.222. The
+affected package set uses Python 3.14.8. The package uses the caller's
 Nixpkgs; other versions and platforms are not yet verified.
 
 ### Manim compatibility
 
 Manim 0.22 removed `write_to_movie` and changed `format = "png"` to mean
 the last frame only. The renderer detects the available output API, selects
-`png-sequence` on 0.22+, and normalizes the new numbered subdirectory to
+`png-sequence` on 0.22+, reads the file writer's actual sequence output path,
+and normalizes its numbered frames to
 Plymouth's existing `frame-00.png` through `frame-59.png` filenames. Earlier
 Manim keeps its original output settings. See the [upstream migration notes](https://github.com/ManimCommunity/manim/releases/tag/v0.22.0).
 
-Test the Nixpkgs revision introducing Manim 0.22 independently of the system's
-package input:
+Test the affected Manim 0.22 / Click 8.4.2 package set independently of the
+system's package input:
 
 ```bash
 nix-build goobnix-plymouth/tests --no-out-link --arg pkgs \
   'import (builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/archive/2a32e69922a9f432cea6ac49dca08c45e8669af4.tar.gz";
-    sha256 = "sha256-fUeyDAaCPu3ibqp7G01vrbkayF6r4pTX0swHOKTscsY=";
+    url = "https://github.com/NixOS/nixpkgs/archive/09063bd1f2b36fd9fd793c36dfade7bd40a93dfc.tar.gz";
+    sha256 = "sha256-Mh0PUaIv4nFY+8wAGonaEh8iBzwsmdNlwjVHmFg1Biw=";
   }) {}'
 ```
+
+Backward compatibility is also checked against held Nixpkgs revision
+`fe13242281a67641c0102cdb1087f0ebe586c7df` (Manim 0.21 / Click 8.3.3),
+and `2a32e69922a9f432cea6ac49dca08c45e8669af4` (Manim 0.22 / Click 8.3.3).
+
+### Temporary Manim help-test correction
+
+Click 8.4.2 deliberately changed optional subcommands from `COMMAND` to
+`[COMMAND]` in help output ([upstream change](https://github.com/pallets/click/pull/3507)).
+Manim 0.22.0's `test_manim_init_subcommand` still expects the older text.
+`goobnix-plymouth/manim.nix` corrects only that expected synopsis for this
+version pair. It is shared by the theme build and development shell, without
+installing a system-wide overlay or changing Click's behavior.
+
+The original source, interpreter, patch hooks, enabled tests and existing
+skip list are preserved. Manim's enabled suite passes with 1,418 passed,
+2 skipped, 5 xfailed and 1 xpassed on the affected package set; the theme
+then renders all 60 frames and passes all 91 Plymouth script checks.
+
+The correction retires automatically in two ways:
+
+- Manim versions other than 0.22.0, or Click older than 8.4.2, use the
+  original upstream derivation without an override.
+- For an upstream backport to 0.22.0, the source guard runs after upstream
+  patches/hooks and makes no edit when the old expectation is absent.
+
+`tests/manim-workaround.nix` checks the version boundaries, exact edit,
+preservation of the upstream hook, and no-op behavior for already-fixed or
+reorganized test sources. It runs as part of the normal repository test target.
+
+These tests cover this repository's renderer and its Manim dependency.
+Independent kernel/module packaging failures require their own fixes; passing
+the theme checks alone does not validate a full NixOS update.
 
 ## Local module
 

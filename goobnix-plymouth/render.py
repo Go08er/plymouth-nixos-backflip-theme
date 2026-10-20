@@ -50,16 +50,17 @@ def main() -> None:
         "output_file": "frame-",
         "zero_pad": 2,
     }):
-        SpringBackflip(
+        scene = SpringBackflip(
             odd_color=args.odd_color,
             even_color=args.even_color,
             playback_speed=2.0,
-        ).render()
+        )
+        scene.render()
 
     if not legacy_output:
         # New Manim writes frame-/00.png instead of frame-00.png. Keep the
         # installed Plymouth filenames identical across both render APIs.
-        sequence = output / "frame-"
+        sequence = Path(scene.renderer.file_writer.final_file_path)
         rendered = [sequence / f"{i:02d}.png" for i in range(60)]
         if sorted(sequence.glob("*.png")) != rendered:
             raise RuntimeError("render did not produce exactly 60 numbered sequence frames")

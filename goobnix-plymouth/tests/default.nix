@@ -2,11 +2,13 @@
 
 let
   theme = pkgs.callPackage ../default.nix { };
+  workaroundChecks = import ./manim-workaround.nix { inherit pkgs; };
 in
 pkgs.runCommand "goobnix-plymouth-script-tests" {
   nativeBuildInputs = [ pkgs.stdenv.cc pkgs.pkg-config ];
   buildInputs = [ pkgs.plymouth ];
 } ''
+  test -e ${workaroundChecks}
   cc -Wall -Wextra ${./runner.c} \
     -I${pkgs.plymouth.src}/src/plugins/splash/script \
     $(pkg-config --cflags ply-splash-graphics) \
