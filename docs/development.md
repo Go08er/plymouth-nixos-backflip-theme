@@ -26,8 +26,27 @@ messages, display repositioning and immediate quit. They do not replace
 real boot testing, especially encrypted-disk unlock.
 
 The verified environment is x86_64 Linux, Nixpkgs 26.11pre-git, Python 3.14.7,
-Manim 0.21.0 and Plymouth 26.134.222. The package uses the caller's Nixpkgs;
-other versions and platforms are not yet verified.
+Manim 0.21.0 / 0.22.0 and Plymouth 26.134.222. The package uses the caller's
+Nixpkgs; other versions and platforms are not yet verified.
+
+### Manim compatibility
+
+Manim 0.22 removed `write_to_movie` and changed `format = "png"` to mean
+the last frame only. The renderer detects the available output API, selects
+`png-sequence` on 0.22+, and normalizes the new numbered subdirectory to
+Plymouth's existing `frame-00.png` through `frame-59.png` filenames. Earlier
+Manim keeps its original output settings. See the [upstream migration notes](https://github.com/ManimCommunity/manim/releases/tag/v0.22.0).
+
+Test the Nixpkgs revision introducing Manim 0.22 independently of the system's
+package input:
+
+```bash
+nix-build goobnix-plymouth/tests --no-out-link --arg pkgs \
+  'import (builtins.fetchTarball {
+    url = "https://github.com/NixOS/nixpkgs/archive/2a32e69922a9f432cea6ac49dca08c45e8669af4.tar.gz";
+    sha256 = "sha256-fUeyDAaCPu3ibqp7G01vrbkayF6r4pTX0swHOKTscsY=";
+  }) {}'
+```
 
 ## Local module
 

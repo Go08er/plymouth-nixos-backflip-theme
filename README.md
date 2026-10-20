@@ -38,7 +38,7 @@ This pins the verified source. Replace your previous Plymouth theme
 configuration, run your usual NixOS rebuild, and reboot. Colors use `#RRGGBB`.
 
 Experimental: build and script checks pass; real boot testing is still pending.
-Verified on x86_64 Linux with Manim 0.21.0 and Plymouth 26.134.222.
+Verified on x86_64 Linux with Manim 0.21.0 / 0.22.0 and Plymouth 26.134.222.
 
 [Build, test, and customize the animation →](docs/development.md)
 
