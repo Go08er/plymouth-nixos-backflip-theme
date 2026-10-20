@@ -18,8 +18,8 @@ boot only plays cached PNGs. Includes password prompts and boot messages.
       source = pkgs.fetchFromGitHub {
         owner = "Go08er";
         repo = "plymouth-nixos-backflip-theme";
-        rev = "b315fb96657dbb25d097fdcb215be2a42d130f0d";
-        hash = "sha256-DItdjAbmJhR4s5C2w/9TjHu0cSyX9i14vRgVoHsaxec=";
+        rev = "420338c4024345b9423577ded3695375db3f4447";
+        hash = "sha256-zGBvtGDbNRnjPwSUUE++NSFZL5zXm1YGZlnQEekBpHw=";
       };
       theme = pkgs.callPackage "${source}/goobnix-plymouth" {
         oddColor = "#FFFF00";
