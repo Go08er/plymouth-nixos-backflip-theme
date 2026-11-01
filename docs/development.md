@@ -25,10 +25,10 @@ graphics and daemon APIs. They cover frame sequencing, password masking,
 messages, display repositioning and immediate quit. They do not replace
 real boot testing, especially encrypted-disk unlock.
 
-The verified environment is x86_64 Linux, Nixpkgs 26.11pre-git, Python 3.14.7,
-Manim 0.21.0 / 0.22.0, Click 8.3.3 / 8.4.2 and Plymouth 26.134.222. The
-affected package set uses Python 3.14.8. The package uses the caller's
-Nixpkgs; other versions and platforms are not yet verified.
+The verified environment is x86_64 Linux, Nixpkgs
+`1c89083e451e891152365b799595cf7790a43325`, Python 3.14.8, Manim 0.22.1,
+Click 8.4.2 and Plymouth 26.134.222. The package and development shell use
+upstream Manim directly from the caller's Nixpkgs.
 
 ### Manim compatibility
 
@@ -39,45 +39,28 @@ and normalizes its numbered frames to
 Plymouth's existing `frame-00.png` through `frame-59.png` filenames. Earlier
 Manim keeps its original output settings. See the [upstream migration notes](https://github.com/ManimCommunity/manim/releases/tag/v0.22.0).
 
-Test the affected Manim 0.22 / Click 8.4.2 package set independently of the
-system's package input:
+Test the verified package set independently of the system's package input:
 
 ```bash
 nix-build goobnix-plymouth/tests --no-out-link --arg pkgs \
   'import (builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/archive/09063bd1f2b36fd9fd793c36dfade7bd40a93dfc.tar.gz";
-    sha256 = "sha256-Mh0PUaIv4nFY+8wAGonaEh8iBzwsmdNlwjVHmFg1Biw=";
+    url = "https://github.com/NixOS/nixpkgs/archive/1c89083e451e891152365b799595cf7790a43325.tar.gz";
+    sha256 = "sha256-Y1CiZ4SoBUjLQyQM/pY+rS2dXD3CHLPstF0lmOc73D4=";
   }) {}'
 ```
 
-Backward compatibility is also checked against held Nixpkgs revision
-`fe13242281a67641c0102cdb1087f0ebe586c7df` (Manim 0.21 / Click 8.3.3),
-and `2a32e69922a9f432cea6ac49dca08c45e8669af4` (Manim 0.22 / Click 8.3.3).
+### Retired help-test workaround
 
-### Temporary Manim help-test correction
+The temporary Manim help-test override and its dedicated guard tests were
+removed on 2026-11-01. Nixpkgs now supplies Manim 0.22.1 and
+[disables the mismatched help snapshot](https://github.com/NixOS/nixpkgs/commit/fa5c292c50f8cde3b49ca49fdfa0d5eb7fae1efe).
+The upstream expectation itself has not been corrected; the repository no
+longer modifies dependency tests.
 
-Click 8.4.2 deliberately changed optional subcommands from `COMMAND` to
-`[COMMAND]` in help output ([upstream change](https://github.com/pallets/click/pull/3507)).
-Manim 0.22.0's `test_manim_init_subcommand` still expects the older text.
-`goobnix-plymouth/manim.nix` corrects only that expected synopsis for this
-version pair. It is shared by the theme build and development shell, without
-installing a system-wide overlay or changing Click's behavior.
-
-The original source, interpreter, patch hooks, enabled tests and existing
-skip list are preserved. Manim's enabled suite passes with 1,418 passed,
-2 skipped, 5 xfailed and 1 xpassed on the affected package set; the theme
-then renders all 60 frames and passes all 91 Plymouth script checks.
-
-The correction retires automatically in two ways:
-
-- Manim versions other than 0.22.0, or Click older than 8.4.2, use the
-  original upstream derivation without an override.
-- For an upstream backport to 0.22.0, the source guard runs after upstream
-  patches/hooks and makes no edit when the old expectation is absent.
-
-`tests/manim-workaround.nix` checks the version boundaries, exact edit,
-preservation of the upstream hook, and no-op behavior for already-fixed or
-reorganized test sources. It runs as part of the normal repository test target.
+Older Nixpkgs revisions combining Manim 0.22.0 with Click 8.4.2 may still
+fail that upstream test. Use the verified revision above or a newer package
+set carrying the upstream packaging fix. The renderer's Manim 0.21 / 0.22
+output-API compatibility remains in place.
 
 These tests cover this repository's renderer and its Manim dependency.
 Independent kernel/module packaging failures require their own fixes; passing

@@ -16,7 +16,7 @@ assert lib.assertMsg (builtins.isInt size && size >= 128 && size <= 1024)
 
 let
   python = python3.withPackages (ps: [
-    (ps.callPackage ./manim.nix { })
+    ps.manim
     ps.pillow
   ]);
   frameCount = 60;
