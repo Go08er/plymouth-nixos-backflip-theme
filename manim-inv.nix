@@ -2,7 +2,7 @@
 
 let
   python = pkgs.python3.withPackages (ps: [
-    (ps.callPackage ./goobnix-plymouth/manim.nix { })
+    ps.manim
     ps.pillow
   ]);
 in
